@@ -1,6 +1,7 @@
 import { AppState } from 'react-native';
 import { useRef, useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import Home from '../screens/Home';
 
 const InactiveChecker = () => {
   const [seconds, setSeconds] = useState(0);
@@ -11,13 +12,14 @@ const InactiveChecker = () => {
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", handleAppStateChange);
-    let interval = null;
-    interval = setInterval(() => {
+
+    setInterval(() => {
       setSeconds(seconds => seconds + 1);
     }, 1000);
+
     if (isMount == true) {
-      if(seconds == 30){
-        reset();
+      if (seconds == 120) {
+        resetTimer();
         navigation.navigate('Lockscreen');
       }
     }
@@ -27,8 +29,12 @@ const InactiveChecker = () => {
     };
   }, [seconds]);
 
-  reset = () =>  {
+  const resetTimer = () => {
     setSeconds(0);
+    console.log("seconds" + seconds);
+    Alert.alert('clicked');
+    isMount = false;
+    subscription.remove();
   }
 
   const handleAppStateChange = (nextAppState) => {
@@ -44,6 +50,7 @@ const InactiveChecker = () => {
     setAppStateVisible(appState.current);
     console.log("AppState", appState.current);
   }
+
 }
 
 export default InactiveChecker;

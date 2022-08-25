@@ -17,6 +17,7 @@ const darkMode = StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 0.25,
         lineHeight: 25,
+        color: 'white',
         fontFamily: 'Poppins-SemiBold'
     },
     passcodeText: {
@@ -24,7 +25,8 @@ const darkMode = StyleSheet.create({
         letterSpacing: -0.20,
         lineHeight: 25,
         textAlign: "center",
-        fontFamily: 'Poppins-Regular'
+        fontFamily: 'Poppins-Regular',
+        color: 'white'
     },
     passcodeContainer: {
         flexDirection: 'row',

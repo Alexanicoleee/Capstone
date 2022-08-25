@@ -13,65 +13,122 @@ import {
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as LocalAuthentication from 'expo-local-authentication';
 import darkMode from '../styles/darkMode';
 import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 const Lockscreen = () => {
-    const [theme,setTheme] = useState(Appearance.getColorScheme());
-  Appearance.addChangeListener((scheme)=>{
-    setTheme(scheme.colorScheme);
-  })
+    const [theme, setTheme] = useState(Appearance.getColorScheme());
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    Appearance.addChangeListener((scheme) => {
+        setTheme(scheme.colorScheme);
+    })
+    const [mistakeCount, setMistakeCount] = useState(0);
+    const [block, isBlock] = useState(false)
     const [passcode, setPasscode] = useState(['', '', '', '']);
+    const [seconds, setSeconds] = useState(0);
     const navigation = useNavigation();
     const [fontsLoaded] = useFonts({
         'Poppins-Regular': require('../assets/fonts/Poppins-Regular.otf'),
         'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.otf'),
         'Poppins-Light': require('../assets/fonts/Poppins-Light.otf'),
-      });
+    });
 
     useEffect(() => {
         async function prepare() {
             await SplashScreen.preventAutoHideAsync();
-          }
-          
-          prepare();
+        }
+        async () => {
+            const compatible = await LocalAuthentication.hasHardwareAsync();
+            setIsBiometricSupported(compatible);
+        };
+        prepare();
         console.log(passcode);
         if (passcode[3] != '') {
             _checker();
         }
     }, [passcode])
 
+    useEffect(() => {
+        console.log(mistakeCount);
+        if (mistakeCount == 2) {
+            isBlock(true);
+            const interval = setInterval(() => {
+                setSeconds(prevSeconds => prevSeconds + 1);
+            }, 1000);
+            console.log("idk" + seconds);
+            if (seconds == 10) {
+                clearInterval(interval);
+                setSeconds(0);
+                isBlock(false);
+                setMistakeCount(0);
+            }
+
+            return () => {
+                clearInterval(interval);
+            }
+        }
+    }, [mistakeCount, seconds])
+
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {
-          await SplashScreen.hideAsync();
+            await SplashScreen.hideAsync();
         }
-      }, [fontsLoaded]);
-      
-      if (!fontsLoaded) {
+    }, [fontsLoaded]);
+
+    if (!fontsLoaded) {
         return null;
-      }
+    }
+
+    handleBiometricAuth = async () => {
+        //check if hardware supports biometric
+        const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+
+        //fall back to default authentication (password)
+        if (!isBiometricAvailable) {
+            navigation.push('Lockscreen')
+        }
+
+        if (isBiometricAvailable)
+            await LocalAuthentication.supportedAuthenticationTypesAsync()
+
+        //check if biometrics are saved locally in user's device
+        const savedBiometrics = await LocalAuthentication.isEnrolledAsync();
+        if (!savedBiometrics) {
+            setMistakeCount(prevMistakeCount => prevMistakeCount + 1);
+            navigation.push('Lockscreen')
+        }
+        const biometricAuth = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Login with Biometric',
+            cancelLabel: 'Cancel',
+            disableDeviceFallback: true,
+        });
+        console.log("here1", biometricAuth);
+        if (biometricAuth.warning) {
+            navigation.push('Lockscreen')
+        }
+        if (!biometricAuth.success) {
+            setMistakeCount(prevMistakeCount => prevMistakeCount + 1);
+            navigation.push('Lockscreen')
+        }
+        if (biometricAuth.success) { navigation.navigate('Home') }
+    };
 
     _checker = () => {
-        let tempCode = passcode;
         //hard coded passcode
         let pin = ['1', '1', '1', '1'];
-        for (let i = 0; i < 5; i++) {
-            if (i < 4) {
-                if (tempCode[i] == pin[i]) {
-                    continue;
-                } else {
-                    setPasscode(['', '', '', '']);
-                    alert("error passcode");
-                    break;
-                }
-            } else if (tempCode[i] == pin[i]) {
-                navigation.navigate('Home');
-                setPasscode(['', '', '', '']);
+        if (pin.toString() === passcode.toString()) {
+            setMistakeCount(0)
+            navigation.navigate('Home');
+            setPasscode(['', '', '', '']);
+        } else {
+            setMistakeCount(prevMistakeCount => prevMistakeCount + 1);
+            setPasscode(['', '', '', '']);
+            if (mistakeCount == 1) {
+                alert('Login failed 5 times wait for 2 minutes to try again.')
             } else {
-                setPasscode(['', '', '', '']);
                 alert("error passcode");
-                break;
             }
         }
     }
@@ -114,8 +171,8 @@ const Lockscreen = () => {
         { id: 9 },
     ]
     return (
-        <SafeAreaView style={theme == 'light'?styles.container:darkMode.container} onLayout={onLayoutRootView}>
-            <StatusBar barStyle={theme == 'light'?"light-content" : "dark-content"} />
+        <SafeAreaView style={theme == 'light' ? styles.container : darkMode.container} onLayout={onLayoutRootView}>
+            <StatusBar barStyle={theme == 'light' ? "light-content" : "dark-content"} />
             <Svg width="170" height="170" position="absolute" left="-25%" top="0%">
                 <Defs>
                     <RadialGradient id="grad1" cx="50%" r="50%" cy="50%" fx="50%" fy="50%">
@@ -144,10 +201,10 @@ const Lockscreen = () => {
                 <Circle cx="135" cy="135" r="135" fill="url(#grad3)" />
             </Svg>
             <View style={styles.headerContainer}>
-                <Text style={styles.header}>Security screen</Text>
+                <Text style={theme == 'light' ? styles.header :  darkMode.header}>Security screen</Text>
             </View>
             <View style={{ marginTop: 32 }}>
-                <Text style={styles.passcodeText}>Enter your passcode</Text>
+                <Text style={theme == 'light' ?  styles.passcodeText : darkMode.passcodeText}>Enter your passcode</Text>
             </View>
             <View style={styles.passcodeContainer}>
                 {passcode?.map((p, index) => {
@@ -156,30 +213,32 @@ const Lockscreen = () => {
                 })}
             </View>
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <View style={theme == 'light'?styles.numbersContainer: darkMode.numbersContainer}>
+                <View style={theme == 'light' ? styles.numbersContainer : darkMode.numbersContainer}>
                     {
                         numbers.map(num => {
                             return (
-                                <TouchableOpacity
-                                    style={theme == 'light'?styles.number:darkMode.number}
+                                <TouchableOpacity disabled={block}
+                                    style={theme == 'light' ? styles.number : darkMode.number}
                                     key={num.id}
                                     onPress={() => _onPressNumber(num.id)}
                                 >
-                                    <Text style={theme == 'light'?styles.numberText: darkMode.numberText}>{num.id}</Text>
+                                    <Text style={theme == 'light' ? styles.numberText : darkMode.numberText}>{num.id}</Text>
                                 </TouchableOpacity>)
                         })
                     }
-                    <View style={theme == 'light'?styles.number:darkMode.number}>
-                        <Image source={require('../assets/fingerprint.png')} style={theme == 'light'?styles.touchID: darkMode.touchID} />
-                    </View>
                     <TouchableOpacity
-                        style={theme == 'light'?styles.number:darkMode.number}
-                        onPress={() => _onPressNumber(0)}>
-                        <Text style={theme == 'light'?styles.numberText: darkMode.numberText}>0</Text>
+                        style={theme == 'light' ? styles.number : darkMode.number}
+                        onPress={handleBiometricAuth} disabled={block}>
+                        <Image source={require('../assets/fingerprint.png')} style={theme == 'light' ? styles.touchID : darkMode.touchID} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={theme == 'light'?styles.number:darkMode.number}
-                        onPress={() => _onPressDelete()}>
-                        <Text style={theme == 'light'?styles.backspace: darkMode.backspace}>&#9003;</Text>
+                    <TouchableOpacity
+                        style={theme == 'light' ? styles.number : darkMode.number}
+                        onPress={() => _onPressNumber(0)} disabled={block}>
+                        <Text style={theme == 'light' ? styles.numberText : darkMode.numberText}>0</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={theme == 'light' ? styles.number : darkMode.number}
+                        onPress={() => _onPressDelete()} disabled={block}>
+                        <Text style={theme == 'light' ? styles.backspace : darkMode.backspace}>&#9003;</Text>
                     </TouchableOpacity>
                 </View>
             </View>

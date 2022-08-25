@@ -6,7 +6,6 @@ import Lockscreen from './screens/Lockscreen';
 import Home from './screens/Home';
 
 export default function App() {
-
   const Stack = createNativeStackNavigator();
 
   return (
