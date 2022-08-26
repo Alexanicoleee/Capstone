@@ -18,14 +18,14 @@ const darkMode = StyleSheet.create({
         letterSpacing: 0.25,
         lineHeight: 25,
         color: 'white',
-        fontFamily: 'Poppins-SemiBold'
+        fontFamily: 'Poppins_600SemiBold'
     },
     passcodeText: {
         fontSize: 20,
         letterSpacing: -0.20,
         lineHeight: 25,
         textAlign: "center",
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins_400Regular',
         color: 'white'
     },
     passcodeContainer: {
@@ -75,7 +75,7 @@ const darkMode = StyleSheet.create({
         color: 'white',
         lineHeight: 36,
         textAlign: 'center',
-        fontFamily: 'Poppins-Light'
+        fontFamily: 'Poppins_300Light'
     },
     forgotContainer: {
         width: '100%',
@@ -86,11 +86,11 @@ const darkMode = StyleSheet.create({
     },
     forgot: {
         fontSize: 16,
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins_400Regular',
         fontWeight: '400',
         letterSpacing: -0.25,
         lineHeight: 20,
-        color: '#8E8E93',
+        color: 'white',
     },
     touchID: {
         width: 40,

@@ -16,7 +16,6 @@ export default function App() {
           component={Lockscreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="Dummy" component={Dummy} />
         <Stack.Screen name="Home" component={Home} />
       </Stack.Navigator>
     </NavigationContainer>

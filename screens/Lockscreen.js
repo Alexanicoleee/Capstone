@@ -11,7 +11,7 @@ import {
     Image
 } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
-import { useFonts } from 'expo-font';
+import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_300Light } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
 import * as LocalAuthentication from 'expo-local-authentication';
 import darkMode from '../styles/darkMode';
@@ -30,20 +30,19 @@ const Lockscreen = () => {
     const [seconds, setSeconds] = useState(0);
     const navigation = useNavigation();
     const [fontsLoaded] = useFonts({
-        'Poppins-Regular': require('../assets/fonts/Poppins-Regular.otf'),
-        'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.otf'),
-        'Poppins-Light': require('../assets/fonts/Poppins-Light.otf'),
+        Poppins_400Regular,
+        Poppins_600SemiBold,
+        Poppins_300Light,
     });
 
     useEffect(() => {
-        async function prepare() {
-            await SplashScreen.preventAutoHideAsync();
+        if (!fontsLoaded) {
+            return null;
         }
         async () => {
             const compatible = await LocalAuthentication.hasHardwareAsync();
             setIsBiometricSupported(compatible);
         };
-        prepare();
         console.log(passcode);
         if (passcode[3] != '') {
             _checker();
@@ -81,7 +80,7 @@ const Lockscreen = () => {
         return null;
     }
 
-    handleBiometricAuth = async () => {
+    const handleBiometricAuth = async () => {
         //check if hardware supports biometric
         const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
 
@@ -115,7 +114,7 @@ const Lockscreen = () => {
         if (biometricAuth.success) { navigation.navigate('Home') }
     };
 
-    _checker = () => {
+    const _checker = () => {
         //hard coded passcode
         let pin = ['1', '1', '1', '1'];
         if (pin.toString() === passcode.toString()) {
@@ -133,7 +132,7 @@ const Lockscreen = () => {
         }
     }
 
-    _onPressNumber = num => {
+    const _onPressNumber = num => {
         let tempCode = passcode;
         for (let i = 0; i < tempCode?.length; i++) {
             if (tempCode[i] === '') {
@@ -146,7 +145,7 @@ const Lockscreen = () => {
         setPasscode([tempCode[0], tempCode[1], tempCode[2], tempCode[3]]);
     };
 
-    _onPressDelete = () => {
+    const _onPressDelete = () => {
         let tempCode = passcode;
         for (let i = tempCode?.length - 1; i >= 0; i--) {
             if (tempCode[i] === '') {
@@ -201,10 +200,10 @@ const Lockscreen = () => {
                 <Circle cx="135" cy="135" r="135" fill="url(#grad3)" />
             </Svg>
             <View style={styles.headerContainer}>
-                <Text style={theme == 'light' ? styles.header :  darkMode.header}>Security screen</Text>
+                <Text style={theme == 'light' ? styles.header : darkMode.header}>Security screen</Text>
             </View>
             <View style={{ marginTop: 32 }}>
-                <Text style={theme == 'light' ?  styles.passcodeText : darkMode.passcodeText}>Enter your passcode</Text>
+                <Text style={theme == 'light' ? styles.passcodeText : darkMode.passcodeText}>Enter your passcode</Text>
             </View>
             <View style={styles.passcodeContainer}>
                 {passcode?.map((p, index) => {
@@ -242,9 +241,9 @@ const Lockscreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>
-            <View style={styles.forgotContainer}>
+            <View style={theme == 'light' ? styles.forgotContainer : darkMode.forgotContainer}>
                 <TouchableOpacity>
-                    <Text style={styles.forgot}>Forgot password?</Text>
+                    <Text style={theme == 'light' ? styles.forgot : darkMode.forgot}>Forgot password?</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -268,14 +267,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 0.25,
         lineHeight: 25,
-        fontFamily: 'Poppins-SemiBold'
+        fontFamily: 'Poppins_600SemiBold'
     },
     passcodeText: {
         fontSize: 20,
         letterSpacing: -0.20,
         lineHeight: 25,
         textAlign: "center",
-        fontFamily: 'Poppins-Regular'
+        fontFamily: 'Poppins_400Regular'
     },
     passcodeContainer: {
         flexDirection: 'row',
@@ -323,7 +322,7 @@ const styles = StyleSheet.create({
         fontSize: 32,
         lineHeight: 36,
         textAlign: 'center',
-        fontFamily: 'Poppins-Light'
+        fontFamily: 'Poppins_300Light'
     },
     forgotContainer: {
         width: '100%',
@@ -334,7 +333,7 @@ const styles = StyleSheet.create({
     },
     forgot: {
         fontSize: 16,
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins_400Regular',
         fontWeight: '400',
         letterSpacing: -0.25,
         lineHeight: 20,
